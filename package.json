@@ -2,7 +2,6 @@
   "name": "lost-and-found-nija",
   "version": "1.0.0",
   "description": "Lost and Found Notice Board for Nigeria",
-  "main": "server.js",
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "client": "vite",
