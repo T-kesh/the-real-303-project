@@ -5,26 +5,31 @@ const multer = require('multer');
 const path = require('path');
 const db = require('./db');
 const fs = require('fs');
+const os = require('os');
 
 const app = express();
-const PORT = 3000;
-
-// Middleware
-app.use(cors());
-app.use(bodyParser.json());
-app.use(express.static('public')); // Serve static files from public folder
-app.use('/uploads', express.static('uploads')); // Serve uploaded images
+const PORT = process.env.PORT || 3000;
 
 // Ensure uploads directory exists
-const uploadDir = path.join(__dirname, 'uploads');
+// On Render, we can write to disk, but it's ephemeral (gone on restart) unless we use a Disk.
+// For Vercel, we used /tmp. For Render, standard local folder is fine (but ephemeral).
+const isVercel = process.env.VERCEL === '1';
+const uploadDir = isVercel ? path.join(os.tmpdir(), 'uploads') : path.join(__dirname, 'uploads');
+
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
 }
 
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+app.use(express.static('dist')); // Serve built Vite frontend
+app.use('/uploads', express.static(uploadDir)); // Serve uploaded images
+
 // Multer Storage Configuration
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname)); // Append timestamp to filename
